@@ -62,25 +62,6 @@
  */
 #define clamp_t(type, val, lo, hi) __clamp((type)(val), (type)(lo), (type)(hi))
 
-#if 0
-#define __clamp_once(val, lo, hi, unique_val, unique_lo, unique_hi) ({          \
-        typeof(val) unique_val = (val);                                         \
-        typeof(lo) unique_lo = (lo);                                            \
-        typeof(hi) unique_hi = (hi);                                            \
-        static_assert(__builtin_choose_expr(__is_constexpr((lo) > (hi)),        \
-                        (lo) <= (hi), true),                                    \
-                "clamp() low limit " #lo " greater than high limit " #hi);      \
-        static_assert(__types_ok(val, lo), "clamp() 'lo' signedness error");    \
-        static_assert(__types_ok(val, hi), "clamp() 'hi' signedness error");    \
-        __clamp(unique_val, unique_lo, unique_hi); })
-
-#define __careful_clamp(val, lo, hi) ({                                 \
-        __builtin_choose_expr(__is_constexpr((val) - (lo) + (hi)),      \
-                __clamp(val, lo, hi),                                   \
-                __clamp_once(val, lo, hi, __UNIQUE_ID(__val),           \
-                             __UNIQUE_ID(__lo), __UNIQUE_ID(__hi))); })
-#endif
-
 /**
  * do_div - returns 2 values: calculate remainder and update new dividend
  * @n: uint64_t dividend (will be updated)
@@ -121,7 +102,6 @@
 }                                                       \
 )
 
-/* NOTE: Rate table should be kept sorted in descending order. */                                                                      
 struct imx_pll14xx_rate_table {                                                                                                        
         unsigned int rate;
         unsigned int pdiv;
@@ -166,7 +146,17 @@ int main (int argc, char *argv[])
 
 	t = &tout;
 	unsigned long prate, rate;
+
+	/* hard coded 24MHz, because this is the default on the
+	 * iMX8MP. If the root clock of your tree is different,
+	 * this value needs to be changed
+	 */
 	prate = 24000000;
+
+	/*
+	 * Just use it correctly, no effort is being done
+	 * to sanitize the input or parse the arguments
+	 */
 	rate = strtoul(argv[1], NULL, 10);
 
         /*
